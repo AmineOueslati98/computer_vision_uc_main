@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
+import easyocr
 
 from core.ocr.config import OcrConfig
 from core.ocr.image_preprocessing import create_preprocessed_image_batch
@@ -20,6 +21,7 @@ class OcrEngine:
         self.config = config
         self.model = None
         self.paddle = False
+        self.easy = False
 
         if "paddle" in self.config.model.engine.lower():
             self.paddle = True
@@ -41,6 +43,14 @@ class OcrEngine:
                 )
             self.model = PaddleOCR(**kwrgs)
 
+        # Update : add easyOCR support
+        elif  "easy" in self.config.model.engine.lower():
+            self.easy = True
+            self.model = easyocr.Reader(["en"])
+        
+        else:
+            raise RuntimeError("Please specify a valid OCR engine: paddle or easy")
+
 
     def ocr(self, image_list, det=False):
         """Performing OCR.
@@ -52,6 +62,13 @@ class OcrEngine:
         if self.paddle:
             result = self.model.ocr(image_list, det)
             return result
+        
+        # Update : add easyOCR support
+        elif self.easy:
+            result = self.model.recognize(image_list[0], allowlist='0123456789km.,')
+            return result
+        else:
+            raise RuntimeError("Initialization error: Please specify a valid OCR engine: paddle or easy")
 
 
 class OcrModel:
@@ -101,10 +118,18 @@ class OcrModel:
         else:
             results = self.model.ocr(image_list, det=False)
 
+        # Update : add easyOCR support
+        if self.config.model.engine=='paddle':
+            results = [result[0] for result in results]
+            
+        elif self.config.model.engine=='easy':
+            results = [result[1] for result in results]
+        
         if self.config.model.post_process:
-            return [self.postprocessing(result[0]) for result in results]
+            return [self.postprocessing(result) for result in results]
 
-        return [result[0] for result in results]
+        return [result for result in results]
+
 
     def __call__(
         self,

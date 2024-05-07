@@ -88,6 +88,9 @@ class AugmentationConfig:
     brightness_limit: Tuple[float, float]
     contrast_limit: Tuple[float, float]
     rotation_limit: Tuple[int, int]
+    # Update: add the cropping args
+    crop_erosion_rate: float
+    crop_prob: float
 
     def is_valid(self) -> bool:
         """ verify if the configuration fields are valid"""
@@ -97,6 +100,9 @@ class AugmentationConfig:
         assert (
             self.brightness_limit[1] <= 0.5
         ), "keep your bightness limit under 0.5 to avoid getting very bright images"
+        assert (
+            self.crop_erosion_rate <= 0.2
+        ), "keep your erosion rate under 0.2 to avoid getting very small bboxes"
 
         return True
 

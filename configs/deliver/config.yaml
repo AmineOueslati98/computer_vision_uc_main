@@ -1,14 +1,14 @@
 "data":
-  "input_shape" : [512, 512, 3]
-  "images_train_dir" : 'enter your training image directory'
-  "annotations_train_file" : 'enter your training annotation file path'
+  "input_shape" : [320, 320, 3]
+  "images_train_dir" : '/computer_vision_uc/dataset-1280/train/images'
+  "annotations_train_file" : '/computer_vision_uc/dataset-1280/train/annotations_json/train.json'
   "validation_split_size": 0.2
   "category_id_to_name" : {0: "tunnel"}
   "num_parallel_calls" : 2
   "prefetch_value": 1
   "seed": 10
-  "images_val_dir": 'enter your validation image directory once available'
-  "annotations_val_file" : 'enter your validation annotation file path once available'
+  "images_val_dir": '/computer_vision_uc/dataset-1280/val/images'
+  "annotations_val_file" : '/computer_vision_uc/dataset-1280/val/annotations_json/val.json'
 
 
 "augmentation":
@@ -18,11 +18,13 @@
   "brightness_limit" : [-0.5, 0.5]
   "contrast_limit" : [-0.2, 0.2]
   "rotation_limit" : [-15, 15]
+  "crop_erosion_rate" : 0.1
+  "crop_prob" : 1.0
 
 "training":
-  "batch_size" : 1
-  "learning_rate" : 0.01
-  "num_batches" : 5
+  "batch_size" : 4
+  "learning_rate" : 0.001
+  "num_batches" : 400
 
 "inference":
   "bbox_color" : [255, 0, 0]  # Red
@@ -46,7 +48,7 @@
     "s_range_for_deskewing": {"tunnel": [200, 255]}
     "v_range_for_deskewing": {"tunnel": [60, 255]}
     # use ppgan to make the resolution of the image better.
-    "apply_super_resolution_gan": True
+    "apply_super_resolution_gan": False
     "super_resolution_batch_size": 4
 
     "apply_adding_border": False
@@ -86,7 +88,7 @@
     "erosion_number_of_iterations": 1
 
   "model":
-    "engine": "paddle"
+    "engine": "easy"  # "easy" or "paddle"
     "paddle_pretrained": ""
     "gpu_memory": 6000
     "rec_image_shape": "3, 32, 320"
@@ -96,7 +98,7 @@
     "drop_score": 0.5
     # post process result text. The text will be normalized to distances eg:3,1km, 1000m..
     "post_process": True
-    "detect_box": True
+    "detect_box": False
 
   "postprocessing":
     "shortest_tunnel_length": 100

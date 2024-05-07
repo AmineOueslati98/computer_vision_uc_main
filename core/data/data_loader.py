@@ -54,8 +54,10 @@ class DataLoader:
         idx_list = list(range(num_images))
 
         for idx in idx_list:
+            # Update : image directory needs to be specified
             file_name = images[idx]
-            image = cv2.imread(file_name)
+            image_path = os.path.join(image_directory, file_name)
+            image = cv2.imread(image_path, file_name)
 
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
@@ -85,14 +87,21 @@ class DataLoader:
 
             num_images = len(images)
             idx_list = list(range(num_images))
-            # keep the train indexes only
-            idx_list = idx_list[
-                int(self.config.data.validation_split_size * num_images) :
-            ]
+
+            # If we don't have a validation dataset, we use a split from the training data
+            if (
+                self.config.data.images_val_dir == None
+                and self.config.data.annotations_val_file == None
+            ):
+                # keep the train indexes only
+                idx_list = idx_list[
+                    int(self.config.data.validation_split_size * num_images) :
+                ]
+            
             random.shuffle(idx_list)
+
         elif self.phase == "val":
             # Take the validation data as split from the training data
-
             if (
                 self.config.data.images_val_dir == None
                 and self.config.data.annotations_val_file == None
@@ -114,7 +123,6 @@ class DataLoader:
                 ]
 
             # Take the validation data from the config file
-
             else:
                 annot_file_path = os.path.join(self.config.data.annotations_val_file)
                 image_directory = os.path.join(self.config.data.images_val_dir)
@@ -126,10 +134,11 @@ class DataLoader:
 
                 idx_list = list(range(num_images))
 
+            # Actually, we don't need to split here since we have a seperate validation dataset, so the next block is commented 
             # Keep the validation indexes only
-            idx_list = idx_list[
-                : int(self.config.data.validation_split_size * num_images)
-            ]
+            # idx_list = idx_list[
+            #     : int(self.config.data.validation_split_size * num_images)
+            # ]
 
         elif self.phase == "eval":
             annot_file_path = os.path.join(self.annot_file_path_test)
@@ -145,7 +154,8 @@ class DataLoader:
 
         for idx in idx_list:
             file_name = images[idx]["file_name"]
-            image_path = os.path.join(file_name)
+            # Update : we need to read the image from the correct directory 
+            image_path = os.path.join(image_directory, file_name) 
             image = cv2.imread(image_path)
 
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -157,8 +167,10 @@ class DataLoader:
                 list(normalize_bbox(bbox, image_height, image_width)) for bbox in bboxes
             ]
             category_ids = images[idx]["category_id"]
+
+            # Update : we do not need the ground truth text in train AND eval phases,
             # We return an empty string for training as we do not train the ocr.
-            if self.phase == "train":
+            if self.phase == "train" or self.phase == "val":
                 text_groundtruth = ""
             else:
                 text_groundtruth = images[idx]["text_groundtruth"]
@@ -214,19 +226,29 @@ def get_dataset(
     logging.info("Phase: %s ", phase)
     if phase == "inference":
 
+        # Update : Correct the output types 
         dataset = tf.data.Dataset.from_generator(
             generator=data_loader.test_data_generator,
-            output_types=(tf.int8),
+            output_types=(
+                tf.int8, # image
+                tf.string  # file_name
+            )
         )
         batched_dataset = dataset.batch(batch_size=config.training.batch_size).prefetch(
             config.data.prefetch_value
         )
 
     else:
-
+        # Update : Correct the output types 
         dataset = tf.data.Dataset.from_generator(
             generator=data_loader.data_generator,
-            output_types=(tf.int8),
+            output_types=(
+                tf.uint8,  # image
+                tf.float32,  # normalized_bboxes
+                tf.int32,  # category_ids
+                tf.string,  # text_groundtruth_list
+                tf.string  # file_name
+            )
         )
 
         preprocessed_dataset = data_loader.preprocess_data(dataset=dataset)

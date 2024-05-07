@@ -107,6 +107,12 @@ class DataAugmentation:
                     contrast_limit=self.config.augmentation.contrast_limit,
                     p=self.config.augmentation.random_brightness_contrast,
                 ),
+                # Update: add the random cropping augmentation
+                RandomSizedBBoxSafeCrop(
+                    width=width, 
+                    height=height, 
+                    erosion_rate=self.config.augmentation.crop_erosion_rate,
+                    p=self.config.augmentation.crop_prob)
             ],
             bbox_params=BboxParams(
                 format="albumentations", label_fields=["category_ids"]

@@ -38,6 +38,7 @@ class TestDataAugmentation:
         config_file.augmentation.horizontal_flip = 1
         config_file.augmentation.rotation = 0
         config_file.augmentation.random_brightness_contrast = 0
+        config_file.augmentation.crop_prob = 0
 
         data_augmentation = DataAugmentation(config=config_file, phase=phase)
         height, width, _ = config_file.data.input_shape
@@ -75,6 +76,7 @@ class TestDataAugmentation:
         config_file.augmentation.horizontal_flip = 0
         config_file.augmentation.rotation = 1
         config_file.augmentation.random_brightness_contrast = 0
+        config_file.augmentation.crop_prob = 0
         data_augmentation = DataAugmentation(config=config_file, phase=phase)
         height, width, _ = config_file.data.input_shape
 
@@ -96,6 +98,49 @@ class TestDataAugmentation:
         assert np.array_equal(aug_im, expected_output)
 
     @staticmethod
+    def test_random_crop(
+        phase,
+        input_image,
+        bboxes_normalized,
+        input_category_ids,
+        config_file,
+        groundtruth_text,
+        input_file_name,
+    ):
+        """This function will test the random cropping augmentation"""
+
+        config_file.augmentation.horizontal_flip = 0
+        config_file.augmentation.rotation = 0
+        config_file.augmentation.random_brightness_contrast = 0
+        config_file.augmentation.crop_prob = 1
+        data_augmentation = DataAugmentation(config=config_file, phase=phase)
+        height, width, _ = config_file.data.input_shape
+
+        aug_im, aug_bboxes, _, _, _ = data_augmentation.process_data(
+            input_image,
+            bboxes_normalized,
+            input_category_ids,
+            groundtruth_text,
+            input_file_name,
+        )
+        aug_im = aug_im.numpy()
+        if phase == "train":
+            # assert that the output image is the same size as required
+            assert aug_im.shape[:2]==(height, width)
+            
+            # Check if all values are between 0 and 1
+            assert all(0 <= coord <= 1 for bbox in aug_bboxes for coord in bbox)
+            
+            # Check if all bounding boxes are present in the cropped image
+            assert len(aug_bboxes) == len(bboxes_normalized)
+        else:
+            expected_output = cv2.resize(
+                input_image, dsize=(height, width), interpolation=cv2.INTER_LINEAR
+            ).astype(np.float32)
+            assert np.array_equal(aug_im, expected_output)
+
+
+    @staticmethod
     @pytest.mark.parametrize("expected_multiplier", [1])
     def test_random_brightness_contrast(
         phase,
@@ -112,6 +157,7 @@ class TestDataAugmentation:
         config_file.augmentation.horizontal_flip = 0
         config_file.augmentation.rotation = 0
         config_file.augmentation.random_brightness_contrast = 1
+        config_file.augmentation.crop_prob = 0
         data_augmentation = DataAugmentation(config=config_file, phase=phase)
 
         height, width, _ = config_file.data.input_shape
