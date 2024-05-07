@@ -1,0 +1,2 @@
+FROM tensorflow_object_detection:latest
+ENTRYPOINT ["python", "-m", "serving.server"]

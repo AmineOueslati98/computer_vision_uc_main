@@ -1,0 +1,6 @@
+# Test dependencies
+# All of these dependencies are pinned to specific versions to achieve reproducible builds (CI/Dev)
+coverage==5.3
+pytest-cov==2.10.1
+pytest-timeout==1.4.2
+pytest==6.1.1

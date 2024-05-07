@@ -1,0 +1,5 @@
+# Contains all dependencies which are needed in the development environment
+
+-r requirements-runtime.txt
+-r requirements-tests.txt
+-r requirements-linters.txt

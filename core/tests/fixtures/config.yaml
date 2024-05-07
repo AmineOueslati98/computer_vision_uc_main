@@ -1,0 +1,103 @@
+"data":
+  "input_shape" : [320, 320, 3]
+  "images_train_dir" : 
+  "annotations_train_file" : 
+  "validation_split_size": 0.5
+  "category_id_to_name" : {0: "tunnel"}
+  "num_parallel_calls" : 2
+  "prefetch_value": 1
+  "seed": 10
+  "images_val_dir": 
+  "annotations_val_file": 
+
+
+"augmentation":
+  "rotation" : 0.5
+  "horizontal_flip" : 0.5
+  "random_brightness_contrast" : 0.5
+  "brightness_limit" : [0, 0]
+  "contrast_limit" : [0.5, 0.5]
+  "rotation_limit" : [90, 90]
+
+"training":
+  "batch_size" : 1
+  "model_config" : "PATH_TO_THE_CONFIG_FILE"
+  "checkpoint_path" : "PATH_TO_THE_CHECKPOINTS_OF_PRETRAINED_MODEL"
+  "output_model_path": "PATH_TO_THE_DIR_OF_THE_OUTPUT_MODEL"
+  "model_name": "PRETRAINED_MODEL_NAME"
+  "learning_rate": 0.01
+  "num_batches": 5
+  "logs_path": "PATH_TO_THE_DIR_OF_TENSORBOARD_LOGS"
+
+"inference":
+  "bbox_color" : [255, 255, 255]  #WHITE
+  "text_color" : [255, 0, 0] #Red
+  "line_thickness" : 1
+  "figure_size" : [22, 22]
+
+"ocr":
+  "preprocessing":
+    "crop_box_coordinate": [0.15, 0.62, 0.88, 0.966]
+    # desired height and width of the cropped image
+    "cropped_part_size": [200, 80]
+    # change the perspective of an image to make it straight.
+    "apply_deskewing": True
+    # hsv value range of the desired part to deskew. This is used to make a better edge
+    # detection of the object to deskew. Use opencv to determine the best ranges for hsv.
+    # Only when apply_deskewing those values are processed.
+    "h_range_for_deskewing": {"tunnel": [90, 120]}
+    "s_range_for_deskewing": {"tunnel": [200, 255]}
+    "v_range_for_deskewing": {"tunnel": [60, 255]}
+    # use ppgan to make the resolution of the image better.
+    "apply_super_resolution_gan": False
+
+    "apply_adding_border": False
+    # border box are given as follow [left, upper, right, lower] with each value
+    #  the number of padded pixels
+    "border_box": [10, 10, 190, 90]
+
+    "apply_histogram_equilization": False
+    "clip_limit": 1
+    "tile_grid_size": [4, 4]
+    # remove noise.
+    "apply_median_blur": False
+    "median_blur_kernel_size": 3
+    # change brightness and contrast.
+    "apply_brightness_contrast": True
+    "brightness": 160
+    "contrast": 110
+
+    "apply_thresholding": False
+    # available modes are: binary, otsu and adaptive_gaussian
+    "threshold_mode": "adaptive_gaussian"
+    # variables for adaptive_gaussian threshold
+    "adaptive_threshold_bloc_size": 35
+    "adaptive_threshold_constant": 2
+    # variable for binary and otsu threshold.
+    "threshold": 127
+
+    "apply_inverting": True
+
+    "apply_dilation": False
+    "dilation_kernel_size": [2, 2]
+    "dilation_number_of_iterations": 1
+
+    "apply_erosion": False
+    "erosion_kernel_size": [2, 2]
+    "erosion_number_of_iterations": 1
+
+  "model":
+    "gpu_memory": 6000
+    "rec_image_shape": "3, 32, 320"
+    "rec_batch_num": 6
+    "max_text_length": 10
+    "use_space_char": False
+    "drop_score": 0.5
+    # post process result text. The text will be normalized to distances eg:3,1km, 1000m..
+    "post_process": True
+
+  "postprocessing":
+    "shortest_tunnel_length": 100
+    "pre_regular_expression": [['[;,:]+','.'],['[^0-9km.]+','']]
+    "grammar": ['[0-9]+', '\.?[0-9]*', 'k?m?']
+    "post_regular_expression": [['\.',',']]
